@@ -1,9 +1,11 @@
 package com.schoolmanagement.schoolmanagement.controller;
 
 import com.schoolmanagement.schoolmanagement.model.ElementModule;
+import com.schoolmanagement.schoolmanagement.model.Enseignant;
 import com.schoolmanagement.schoolmanagement.model.Filière;
 import com.schoolmanagement.schoolmanagement.model.Modules;
 import com.schoolmanagement.schoolmanagement.repository.ElementModuleRepository;
+import com.schoolmanagement.schoolmanagement.repository.EnseignantRepository;
 import com.schoolmanagement.schoolmanagement.repository.FiliereRepository;
 import com.schoolmanagement.schoolmanagement.repository.ModuleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,18 +27,22 @@ public class ElementModuleController {
     private ElementModuleRepository elementModuleRepository;
     @Autowired
     private ModuleRepository moduleRepository;
+    @Autowired
+    private EnseignantRepository enseignantRepository;
     @PostMapping("/create")
-    public String createElementModule(@RequestBody ElementModule elementModule, @RequestParam int mid) {
+    public String createElementModule(@RequestBody ElementModule elementModule, @RequestParam int mid, @RequestParam int eid) {
         try {
             Optional<Modules> optionalModule = moduleRepository.findById(mid);
-
-            if (optionalModule.isPresent()) {
+            Optional<Enseignant> optionalEnseignant = enseignantRepository.findById(eid);
+            if (optionalModule.isPresent() && optionalEnseignant.isPresent()) {
                 Modules module = optionalModule.get();
+                Enseignant enseignant = optionalEnseignant.get();
                 elementModule.setModules(module);
+                elementModule.setEnseignant(enseignant);
                 elementModuleRepository.save(elementModule);
                 return "Element de module created successfully";
             } else {
-                return "Error creating Element de Module: Module not found";
+                return "Error creating Element de Module";
             }
         } catch (DataIntegrityViolationException e) {
             return "Error creating Element de Module: Constraint violation occurred";
@@ -61,7 +67,7 @@ public class ElementModuleController {
     }
 
     @PutMapping("update/{id_emodule}")
-    public String updateElementModule(@PathVariable int id_emodule, @RequestBody ElementModule updatedElementModule, @RequestParam int mid) {
+    public String updateElementModule(@PathVariable int id_emodule, @RequestBody ElementModule updatedElementModule, @RequestParam int mid, @RequestParam int eid) {
         try {
             Optional<ElementModule> emod = elementModuleRepository.findById(id_emodule);
             if (emod.isPresent()) {
@@ -69,18 +75,17 @@ public class ElementModuleController {
                 existingEmod.setCode_element_module(updatedElementModule.getCode_element_module());
                 existingEmod.setElement_module_name(updatedElementModule.getElement_module_name());
 
-                // Recherche de la filière par son ID
                 Optional<Modules> newModule = moduleRepository.findById(mid);
+                Optional<Enseignant> newEnseignant = enseignantRepository.findById(eid);
+                if (newModule.isPresent() && newEnseignant.isPresent()) {
 
-                if (newModule.isPresent()) {
-                    // Associer la nouvelle filière au module
                     existingEmod.setModules(newModule.get());
+                    existingEmod.setEnseignant(newEnseignant.get());
 
-                    // Enregistrer les modifications dans le repository des modules
                     elementModuleRepository.save(existingEmod);
                     return "Element de Module updated successfully";
                 } else {
-                    return "Error updating Element de Module: Module not found";
+                    return "Error updating Element de Module";
                 }
             }
             return "Element de Module doesn't exist";

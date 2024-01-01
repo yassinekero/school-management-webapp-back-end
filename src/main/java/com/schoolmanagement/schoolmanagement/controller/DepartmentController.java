@@ -1,7 +1,10 @@
 package com.schoolmanagement.schoolmanagement.controller;
 
 import com.schoolmanagement.schoolmanagement.model.Departement;
+import com.schoolmanagement.schoolmanagement.model.Enseignant;
+import com.schoolmanagement.schoolmanagement.model.Modules;
 import com.schoolmanagement.schoolmanagement.repository.DepartementRepository;
+import com.schoolmanagement.schoolmanagement.repository.EnseignantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -19,15 +22,24 @@ import java.util.Optional;
 public class DepartmentController {
     @Autowired
     private DepartementRepository departementRepository;
+    @Autowired
+    private EnseignantRepository enseignantRepository;
     @PostMapping("/create")
-    public ResponseEntity<String> createDepartement(@RequestBody Departement departement) {
+    public String createDepartement(@RequestBody Departement departement, @RequestParam int eid) {
         try {
-            departementRepository.save(departement);
-            return ResponseEntity.ok("Department created successfully");
+            Optional<Enseignant> optionalEnseignant = enseignantRepository.findById(eid);
+            if ( optionalEnseignant.isPresent()) {
+                Enseignant enseignant = optionalEnseignant.get();
+                departement.setEnseignant(enseignant);
+                departementRepository.save(departement);
+                return "Department created successfully";
+            } else {
+                return "Error creating Department";
+            }
         } catch (DataIntegrityViolationException e) {
-            return ResponseEntity.badRequest().body("Error creating department: Constraint violation occurred");
+            return "Error creating Element de Module: Constraint violation occurred";
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating department: " + e.getMessage());
+            return "Error creating Element de Module: " + e.getMessage();
         }
     }
     @GetMapping
@@ -49,13 +61,16 @@ public class DepartmentController {
     }
 
     @PutMapping("update/{id_dept}")
-    public ResponseEntity<String> updateDept(@PathVariable int id_dept, @RequestBody Departement departement) {
+    public ResponseEntity<String> updateDept(@PathVariable int id_dept, @RequestBody Departement departement, @RequestParam int eid) {
         try {
             Optional<Departement> dept = departementRepository.findById(id_dept);
-            if (dept.isPresent()) {
+            Optional<Enseignant> optionalEnseignant = enseignantRepository.findById(eid);
+            if (dept.isPresent() && optionalEnseignant.isPresent())
+            {
                 Departement existingDept = dept.get();
+                Enseignant enseignant = optionalEnseignant.get();
                 existingDept.setDept_name(departement.getDept_name());
-                existingDept.setDept_respo(departement.getDept_respo());
+                existingDept.setEnseignant(enseignant);
                 departementRepository.save(existingDept);
                 return ResponseEntity.ok("Department updated successfully");
             }

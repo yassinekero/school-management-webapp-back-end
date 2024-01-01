@@ -13,9 +13,6 @@ import java.util.Set;
 @Getter
 @Setter
 public class Enseignant {
-    @ManyToOne
-    @JoinColumn(name = "element_module_id ",referencedColumnName = "id_element_module")
-    private ElementModule elementModule;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id_enseignant;
@@ -23,8 +20,7 @@ public class Enseignant {
 
     private String prenomEnseignant;
 
-    @ManyToMany(mappedBy = "enseignants")
-    private Set<ElementModule> elements = new HashSet<>();
+
 
 
 

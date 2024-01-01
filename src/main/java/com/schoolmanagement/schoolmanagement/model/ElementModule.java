@@ -27,13 +27,9 @@ public class ElementModule {
     private String code_element_module;
     @Column(name = "emn", nullable = false, unique = true)
     private String element_module_name;
-    @ManyToMany
-    @JoinTable(
-            name = "enseignant_element",
-            joinColumns = @JoinColumn(name = "enseignant_id"),
-            inverseJoinColumns = @JoinColumn(name = "element_id")
-    )
-    private Set<Enseignant> enseignants = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "enseignant_id ",referencedColumnName = "id_enseignant")
+    private Enseignant enseignant;
 
     @Override
     public String toString() {
@@ -42,6 +38,7 @@ public class ElementModule {
                 ", id_element_module=" + id_element_module +
                 ", code_element_module='" + code_element_module + '\'' +
                 ", element_module_name='" + element_module_name + '\'' +
+                ", enseignant=" + enseignant +
                 '}';
     }
 }
